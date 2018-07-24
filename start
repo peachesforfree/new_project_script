@@ -1,0 +1,135 @@
+#! /bin/csh -f
+
+set confirm='n'
+
+printf 'Welcome to the the project starter wizard -- by sbalcort\n\n'
+
+start:
+	printf "\tPlease enter the name of the project: "
+
+set name = $<
+
+while (1)
+	printf "\nYou said the project is called: '%s'\n\tIs this correct? (Y/N): " $name
+	set confirm = $<
+	if ($confirm == 'y' || $confirm == 'Y' || $confirm == 'yes' || $confirm == 'Yes' || $confirm == 'YES') then
+		break
+	else if ($confirm == 'n' || $confirm == 'N' || $confirm == 'no' || $confirm == 'NO') then
+		goto start
+	endif
+end
+
+school:
+	printf "\nPlease enter your vogsphere repo URL: "
+	set vogs = $<
+
+while (1)
+	printf "\nVGS repo URL is: %s\n\tIs this correct? (Y/N): " $vogs
+	set confirm = $<
+	if ($confirm == 'y' || $confirm == 'Y' || $confirm == 'yes' || $confirm == 'Yes' || $confirm == 'YES') then
+		break
+	else if ($confirm == 'n' || $confirm == 'N' || $confirm == 'no' || $confirm == 'NO') then
+		goto school
+	endif
+end
+
+git clone $vogs $name
+
+chdir $name
+mkdir sources includes
+touch author Makefile sources/main.c
+chmod 755 sources includes author Makefile sources/main.c
+echo ${USER} > author
+
+wantsub:
+while (1)
+	printf "\nDo you want to add a git submodule?	i.e. libft (Y/N): "
+	set confirm = $<
+	if ($confirm == 'y' || $confirm == 'Y' || $confirm == 'yes' || $confirm == 'Yes' || $confirm == 'YES') then
+		goto addsubmodule
+	else if ($confirm == 'n' || $confirm == 'N' || $confirm == 'no' || $confirm == 'NO') then
+		goto makeheader
+	endif
+end
+
+addsubmodule:
+	printf "\nPlease enter direct URL for submodule: "
+	set module = $<
+	while (1)
+		printf "\nYou want to set submodule '%s'\nIs this correct? (Y/N): " $module
+		set confirm = $<
+		if ($confirm == 'y' || $confirm == 'Y' || $confirm == 'yes' || $confirm == 'Yes' || $confirm == 'YES') then
+			break
+		else if ($confirm == 'n' || $confirm == 'N' || $confirm == 'no' || $confirm == 'NO') then
+			goto wantsub
+		endif
+	end
+	git submodule add $module
+	printf "\nDo you want to add another? "
+	set confirm = $<
+	if ($confirm == 'y' || $confirm == 'Y' || $confirm == 'yes' || $confirm == 'Yes' || $confirm == 'YES') then
+		goto addsubmodule
+	endif
+
+makeheader:
+	touch includes/$name.h && chmod 755 includes/$name.h
+	set headername=`echo $name | tr "[:lower:]" "[:upper:]"`_H
+	echo "#ifndef $headername" >> includes/$name.h
+	echo "# define $headername" >> includes/$name.h
+	echo "#endif" >> includes/$name.h
+
+##making make file
+
+
+set name="ft_ls"
+
+touch Makefile && chmod 755 Makefile
+
+echo '#\!/usr/bin/make -f'  >> Makefile
+echo "" >> Makefile
+echo "NAME = $name" >> Makefile
+
+echo 'CFLAGS = -Wall -Wextra -Werror -g' >> Makefile
+
+echo 'SRCS =	main' >> Makefile
+
+echo 'SRC_DIR = ./sources/' >> Makefile
+echo 'OBJ_DIR = ./obj/' >> Makefile
+echo 'INC_DIR = ./includes/' >> Makefile
+echo 'LIBFT_DIR = ./libft/' >> Makefile
+
+echo 'SRC = $(addprefix $(SRC_DIR), $(SRC_FILES))' >> Makefile
+echo 'OBJ = $(addprefix $(OBJ_DIR), $(OBJ_FILES))' >> Makefile
+echo 'LIBFT = $(addprefix $(LIBFT_DIR), libft.a)' >> Makefile
+echo 'OBJ_FILES = $(SRCS:%=%.o)' >> Makefile
+echo 'SRC_FILES = $(SRCS:%=%.c)' >> Makefile
+
+
+echo 'all: obj $(LIBFT) $(NAME)' >> Makefile
+
+echo 'obj:' >> Makefile
+echo '	mkdir -p $(OBJ_DIR)' >> Makefile
+
+echo '$(OBJ_DIR)%.o:$(SRC_DIR)%.c' >> Makefile
+echo '	gcc -g -Wall -Werror -Wextra -c -I ./libft/libft.h -I includes  -o $@ -c $<' >> Makefile
+
+echo '$(LIBFT):' >> Makefile
+echo '	make -C $(LIBFT_DIR)' >> Makefile
+
+echo '$(NAME): $(OBJ)' >> Makefile
+echo '	gcc -g -shared -ldl $(LIBFT) $(OBJ) -o $(NAME)' >> Makefile
+
+echo 'clean:' >> Makefile
+echo '	rm -rf $(OBJ_DIR)' >> Makefile
+echo '	make -C $(LIBFT_DIR) clean' >> Makefile
+
+echo 'fclean: clean' >> Makefile
+echo '	rm -f $(NAME)' >> Makefile
+echo '	make -C $(LIBFT_DIR) fclean' >> Makefile
+
+echo 're: fclean all' >> Makefile
+
+echo '.PHONY: clean fclean all re' >> Makefile
+
+echo '#include " >> sources/main.c
+echo "$name.h\"" >> sources/main.c
