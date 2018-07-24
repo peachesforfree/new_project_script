@@ -69,6 +69,8 @@ addsubmodule:
 	set confirm = $<
 	if ($confirm == 'y' || $confirm == 'Y' || $confirm == 'yes' || $confirm == 'Yes' || $confirm == 'YES') then
 		goto addsubmodule
+	else if ($confirm == 'n' || $confirm == 'N' || $confirm == 'no' || $confirm == 'NO') then
+		goto makeheader
 	endif
 
 makeheader:
@@ -79,11 +81,6 @@ makeheader:
 	echo "#endif" >> includes/$name.h
 
 ##making make file
-
-
-set name="ft_ls"
-
-touch Makefile && chmod 755 Makefile
 
 echo '#\!/usr/bin/make -f'  >> Makefile
 echo "" >> Makefile
@@ -131,5 +128,13 @@ echo 're: fclean all' >> Makefile
 
 echo '.PHONY: clean fclean all re' >> Makefile
 
-echo '#include " >> sources/main.c
-echo "$name.h\"" >> sources/main.c
+
+## starting main.c
+set quote='"'
+echo "#include $quote$name.h$quote" > sources/main.c
+echo "" >> sources/main.c
+echo "int main(int argc, char **argv)" >> sources/main.c
+echo "{" >> sources/main.c
+echo "" >> sources/main.c
+echo "return (0);" >> sources/main.c
+echo "}" >> sources/main.c
